@@ -1,0 +1,60 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+sns.set()
+plt.rcParams['patch.force_edgecolor'] = True
+plt.rcParams['axes.labelweight'] = 'bold'
+import warnings
+warnings.filterwarnings('ignore')
+! wget https://cdn.freecodecamp.org/project-data/health-costs/insurance.csv
+data = pd.read_csv('insurance.csv')
+data.info() #dasar informasi data
+from pandas.plotting import scatter_matrix
+scatter_matrix(data[['age','sex','bmi', 'children','expenses']], alpha=0.3, diagonal='kde')
+plt.figure(1)
+plt.subplot(2,2,1)
+data.groupby(['sex'])['expenses'].sum().plot.bar()
+plt.subplot(2,2,2)
+data.groupby(['smoker'])['expenses'].sum().plot.bar()
+plt.subplot(2,2,3)
+data.groupby(['region'])['expenses'].sum().plot.bar()
+
+plt.figure(2)
+plt.subplot(2,2,1)
+data.groupby(['sex'])['bmi'].sum().plot.bar()
+plt.subplot(2,2,2)
+data.groupby(['smoker'])['bmi'].sum().plot.bar()
+plt.subplot(2,2,3)
+data.groupby(['region'])['bmi'].sum().plot.bar()
+data.isnull().sum()
+
+catColumns = ['sex', 'smoker', 'region']
+data_dum = pd.get_dummies(data, columns = catColumns, drop_first=True)
+data_dum.head()
+
+x = data_dum[['age', 'bmi', 'smoker_yes']]
+y = data_dum['expenses']
+from sklearn.linear_model import LinearRegression, RidgeCV, LassoCV
+
+#membentuk estimator menggunakan regresi linear
+linreg = LinearRegression()
+#membentuk estimator menggunakan model reg ridge dengan CV =5
+ridgereg = RidgeCV(alphas=(0.1,0.3,0.7,1.0),cv=5)
+#membentuk estimator menggunakan model reg lasso dengan CV = 5
+lassoreg = LassoCV(eps=0.001, cv = 5)
+from sklearn.model_selection import cross_val_score
+
+
+
+linreg.fit(x,y) #membuat model regresi untuk x dan y
+linreg.score(x,y)
+
+linreg.coef_
+#memunculkan intercept atau Beta nol-B0
+linreg.intercept_
+def calc_insurance(age, bmi , smoking):
+  y = ((age*linreg.coef_[0])+ (bmi*linreg.coef_[1] )+ (smoking*linreg.coef_[2]) - (linreg.intercept_))  
+  print(y)
+print(calc_insurance(36, 24, 0))
